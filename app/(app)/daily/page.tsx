@@ -1,15 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { dailyByEditor, sumRows } from "@/lib/rollup";
 import { CATEGORIES } from "@/lib/constants";
 import { formatDuration, prettyDate, shiftDate, todayStr } from "@/lib/format";
 import { StatCard } from "@/components/ui";
+import { Icon } from "@/components/icons";
 
-export default function DailyPage() {
+function DailyInner() {
   const { entries, profiles } = useStore();
+  const searchParams = useSearchParams();
   const [date, setDate] = useState(todayStr());
+
+  // Sync from the ?date=YYYY-MM-DD param (set by the sidebar calendar)
+  useEffect(() => {
+    const d = searchParams.get("date");
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) setDate(d);
+  }, [searchParams]);
 
   const rows = useMemo(
     () => dailyByEditor(entries, profiles, date),
@@ -23,7 +32,7 @@ export default function DailyPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <button className="btn-ghost" onClick={() => setDate((d) => shiftDate(d, -1))}>
-            ← Prev
+            <Icon name="chevronLeft" className="h-4 w-4" /> Prev
           </button>
           <input
             type="date"
@@ -32,7 +41,7 @@ export default function DailyPage() {
             onChange={(e) => setDate(e.target.value)}
           />
           <button className="btn-ghost" onClick={() => setDate((d) => shiftDate(d, 1))}>
-            Next →
+            Next <Icon name="chevronRight" className="h-4 w-4" />
           </button>
           <button className="btn-ghost" onClick={() => setDate(todayStr())}>
             Today
@@ -111,5 +120,13 @@ export default function DailyPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DailyPage() {
+  return (
+    <Suspense fallback={<div className="py-20" />}>
+      <DailyInner />
+    </Suspense>
   );
 }

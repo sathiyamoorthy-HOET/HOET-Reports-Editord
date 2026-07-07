@@ -3,6 +3,7 @@
 import React from "react";
 import { statusMeta, categoryMeta } from "@/lib/constants";
 import type { Category, Status } from "@/lib/types";
+import { Icon } from "./icons";
 
 export function Logo({ size = 32 }: { size?: number }) {
   return (
@@ -67,7 +68,7 @@ export function StatCard({
 export function Empty({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white py-16 text-center">
-      <div className="text-3xl">📭</div>
+      <Icon name="inbox" className="h-8 w-8 text-slate-300" />
       <div className="mt-2 font-medium text-slate-600">{title}</div>
       {hint && <div className="mt-1 max-w-sm text-sm text-slate-400">{hint}</div>}
     </div>

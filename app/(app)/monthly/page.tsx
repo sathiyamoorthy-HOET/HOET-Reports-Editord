@@ -6,6 +6,7 @@ import { monthlyByEditor, sumRows } from "@/lib/rollup";
 import { CATEGORIES } from "@/lib/constants";
 import { currentMonthKey, formatDuration, monthKey, monthLabel } from "@/lib/format";
 import { StatCard } from "@/components/ui";
+import { Icon } from "@/components/icons";
 
 export default function MonthlyPage() {
   const { entries, profiles } = useStore();
@@ -61,7 +62,9 @@ export default function MonthlyPage() {
             ))}
           </select>
         </div>
-        <button className="btn-primary" onClick={exportCsv}>⬇ Export CSV</button>
+        <button className="btn-primary" onClick={exportCsv}>
+          <Icon name="download" className="h-4 w-4" /> Export CSV
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
