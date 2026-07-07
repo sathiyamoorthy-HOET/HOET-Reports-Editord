@@ -42,7 +42,7 @@ export default function DailyPage() {
       </div>
 
       {/* Totals */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <StatCard label="Total videos" value={totals.total} />
         <StatCard label="Active editors" value={totals.activeEditors} accent="#10b981" />
         <StatCard label="Duration" value={formatDuration(totals.durationSeconds)} accent="#f59e0b" />
