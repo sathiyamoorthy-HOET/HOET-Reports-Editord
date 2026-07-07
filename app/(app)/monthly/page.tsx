@@ -83,7 +83,7 @@ export default function MonthlyPage() {
             <thead className="bg-slate-50">
               <tr>
                 <th className="th">Editor</th>
-                <th className="th">Pod</th>
+                <th className="th">Team</th>
                 {CATEGORIES.map((c) => (
                   <th key={c.value} className="th text-center">{c.label}</th>
                 ))}

@@ -15,8 +15,11 @@ export interface Profile {
   id: string;
   username: string;
   fullName: string;
+  email?: string | null;
   role: Role;
-  pod?: string | null;
+  pod?: string | null; // the manager's team this person belongs to
+  focus?: string | null; // content specialization (Organic / Course / Ads / Podcast)
+  wfh?: boolean;
   title?: string | null;
   active: boolean;
 }

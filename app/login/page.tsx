@@ -34,9 +34,9 @@ export default function LoginPage() {
 
   const demoAccounts = [
     ROSTER.find((r) => r.username === "krishna"),
+    ROSTER.find((r) => r.username === "prince"),
     ROSTER.find((r) => r.username === "sathiya"),
     ROSTER.find((r) => r.username === "vyshak"),
-    ROSTER.find((r) => r.username === "admin"),
   ].filter(Boolean) as typeof ROSTER;
 
   return (
@@ -52,10 +52,10 @@ export default function LoginPage() {
 
         <form onSubmit={submit} className="card p-6">
           <div className="mb-4">
-            <label className="label">Username</label>
+            <label className="label">{mode === "cloud" ? "Email or username" : "Username"}</label>
             <input
               className="input"
-              placeholder="e.g. krishna"
+              placeholder={mode === "cloud" ? "you@houseofedtech.in" : "e.g. krishna"}
               autoCapitalize="none"
               autoCorrect="off"
               value={username}

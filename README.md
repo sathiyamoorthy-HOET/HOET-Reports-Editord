@@ -3,11 +3,16 @@
 A video-editing **work report management app** for House of EduTech — replaces
 the daily/deputy/manager report spreadsheets with one connected application.
 
-- **Editors** log each video (code, title, category, duration, links, status, remarks).
-- **Deputy managers** see a live **Daily Dashboard** — per-editor counts + day totals.
-- **Managers** see a **Monthly Report** — per-editor rollup with Week 1–5 breakdown, CSV export.
-- **Admins** manage users, roles and pods.
-- Username login. One editor's entry **flows up automatically** into every connected view.
+Two roles:
+
+- **Editor** — logs each video (My Work), gets a personal **My Week** and **My Month**
+  report, and can **see all team data** (Daily Dashboard + Monthly Report, read-only).
+- **Manager** — everything editors see, plus the **Team & Users** page to add people,
+  assign/create teams, set content focus, and change roles.
+
+One editor's entry **flows up automatically** into every connected view (daily + monthly).
+Login is by email (`name@houseofedtech.in`) or username; in local demo mode use the
+username + `Hoet@2026`.
 
 ## Two modes (same codebase)
 
@@ -29,9 +34,10 @@ npm run dev
 # open http://localhost:3000
 ```
 
-Sign in with any username (e.g. `krishna`, `sathiya`, `vyshak`, `admin`) and
-password `Hoet@2026`. Open two browser tabs as different roles to watch updates
-sync live.
+Sign in with any username and password `Hoet@2026`:
+`krishna` / `prince` (editors), `sathiya` / `vyshak` / `mukesh` / `kaustubh` /
+`dheemanth` (managers). Open two browser tabs as different roles to watch updates
+sync live. The demo is pre-seeded with Sathiya Moorthy's sample work entries.
 
 ## Deploy to Vercel (shared live data)
 

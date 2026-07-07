@@ -8,11 +8,12 @@ export interface NavItem {
 }
 
 export const NAV: NavItem[] = [
-  { href: "/my-work", label: "My Work", icon: "🎬", roles: ["editor", "deputy", "manager", "admin"] },
-  { href: "/daily", label: "Daily Dashboard", icon: "📅", roles: ["deputy", "manager", "admin"] },
-  { href: "/monthly", label: "Monthly Report", icon: "📊", roles: ["manager", "admin"] },
-  { href: "/team", label: "Team & SOP", icon: "🗂️", roles: ["deputy", "manager", "admin"] },
-  { href: "/admin", label: "Users", icon: "⚙️", roles: ["admin"] },
+  { href: "/my-work", label: "My Work", icon: "🎬", roles: ["editor", "manager"] },
+  { href: "/my-week", label: "My Week", icon: "🗓️", roles: ["editor", "manager"] },
+  { href: "/my-month", label: "My Month", icon: "📈", roles: ["editor", "manager"] },
+  { href: "/daily", label: "Daily Dashboard", icon: "📅", roles: ["editor", "manager"] },
+  { href: "/monthly", label: "Monthly Report", icon: "📊", roles: ["editor", "manager"] },
+  { href: "/admin", label: "Team & Users", icon: "⚙️", roles: ["manager"] },
 ];
 
 export function navFor(role: Role): NavItem[] {
@@ -21,14 +22,9 @@ export function navFor(role: Role): NavItem[] {
 
 export function landingFor(role: Role): string {
   switch (role) {
-    case "editor":
-      return "/my-work";
-    case "deputy":
-      return "/daily";
     case "manager":
       return "/monthly";
-    case "admin":
-      return "/admin";
+    case "editor":
     default:
       return "/my-work";
   }

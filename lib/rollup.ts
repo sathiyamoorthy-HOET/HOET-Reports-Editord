@@ -10,6 +10,15 @@ export interface CategoryCounts {
 
 const emptyCounts = (): CategoryCounts => ({ organic: 0, ads: 0, reash: 0, course: 0 });
 
+// The people shown as rows: all active editors, plus anyone (deputy /
+// manager) who actually logged work in the period. Sorted by name.
+function contributors(profiles: Profile[], periodEntries: WorkEntry[]): Profile[] {
+  const withWork = new Set(periodEntries.map((e) => e.editorId));
+  return profiles
+    .filter((p) => p.active && (p.role === "editor" || withWork.has(p.id)))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+}
+
 export interface EditorDayRow {
   editorId: string;
   editorName: string;
@@ -27,8 +36,8 @@ export function dailyByEditor(
   profiles: Profile[],
   date: string
 ): EditorDayRow[] {
-  const editors = profiles.filter((p) => p.role === "editor" && p.active);
   const dayEntries = entries.filter((e) => e.workDate === date);
+  const editors = contributors(profiles, dayEntries);
   const byEditor = new Map<string, WorkEntry[]>();
   for (const e of dayEntries) {
     const list = byEditor.get(e.editorId) ?? [];
@@ -83,8 +92,8 @@ export function monthlyByEditor(
   profiles: Profile[],
   mk: string
 ): EditorMonthRow[] {
-  const editors = profiles.filter((p) => p.role === "editor" && p.active);
   const monthEntries = entries.filter((e) => monthKey(e.workDate) === mk);
+  const editors = contributors(profiles, monthEntries);
   const byEditor = new Map<string, WorkEntry[]>();
   for (const e of monthEntries) {
     const list = byEditor.get(e.editorId) ?? [];

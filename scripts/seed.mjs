@@ -41,7 +41,7 @@ loadEnv();
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PASSWORD = process.env.SEED_DEFAULT_PASSWORD || "Hoet@2026";
-const DOMAIN = "hoet.local";
+const DOMAIN = "houseofedtech.in";
 
 if (!URL || !SERVICE_KEY) {
   console.error(
@@ -79,7 +79,7 @@ async function run() {
   let skipped = 0;
 
   for (const m of roster) {
-    const email = `${m.username}@${DOMAIN}`;
+    const email = (m.email || `${m.username}@${DOMAIN}`).toLowerCase();
     let user = await findUserByEmail(email);
 
     if (!user) {
@@ -105,8 +105,11 @@ async function run() {
       id: user.id,
       username: m.username,
       full_name: m.fullName,
+      email,
       role: m.role,
       pod: m.pod ?? null,
+      focus: m.focus ?? null,
+      wfh: m.wfh ?? false,
       title: m.title ?? null,
       active: true,
     });

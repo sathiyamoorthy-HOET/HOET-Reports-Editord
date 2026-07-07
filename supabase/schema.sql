@@ -9,13 +9,21 @@ create table if not exists public.profiles (
   id         uuid primary key references auth.users(id) on delete cascade,
   username   text unique not null,
   full_name  text not null,
+  email      text,
   role       text not null default 'editor'
-             check (role in ('editor','deputy','manager','admin')),
-  pod        text,
+             check (role in ('editor','manager')),
+  pod        text,   -- manager's team
+  focus      text,   -- content specialization (Organic / Course / Ads / Podcast)
+  wfh        boolean not null default false,
   title      text,
   active     boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+-- if upgrading an existing project, add the newer columns:
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists focus text;
+alter table public.profiles add column if not exists wfh boolean not null default false;
 
 -- ── work_entries: single source of truth (one row per video) ─
 create table if not exists public.work_entries (
@@ -83,10 +91,11 @@ create policy profiles_update_self on public.profiles
   with check ((select auth.uid()) = id);
 
 drop policy if exists profiles_admin_all on public.profiles;
-create policy profiles_admin_all on public.profiles
+drop policy if exists profiles_manager_all on public.profiles;
+create policy profiles_manager_all on public.profiles
   for all to authenticated
-  using (public.current_user_role() = 'admin')
-  with check (public.current_user_role() = 'admin');
+  using (public.current_user_role() = 'manager')
+  with check (public.current_user_role() = 'manager');
 
 -- work_entries: everyone signed in can read all (dashboards roll up
 -- across the whole team). Editors write their own rows; managers,
@@ -100,7 +109,7 @@ create policy entries_insert on public.work_entries
   for insert to authenticated
   with check (
     editor_id = (select auth.uid())
-    or public.current_user_role() in ('manager','deputy','admin')
+    or public.current_user_role() = 'manager'
   );
 
 drop policy if exists entries_update on public.work_entries;
@@ -108,11 +117,11 @@ create policy entries_update on public.work_entries
   for update to authenticated
   using (
     editor_id = (select auth.uid())
-    or public.current_user_role() in ('manager','deputy','admin')
+    or public.current_user_role() = 'manager'
   )
   with check (
     editor_id = (select auth.uid())
-    or public.current_user_role() in ('manager','deputy','admin')
+    or public.current_user_role() = 'manager'
   );
 
 drop policy if exists entries_delete on public.work_entries;
@@ -120,7 +129,7 @@ create policy entries_delete on public.work_entries
   for delete to authenticated
   using (
     editor_id = (select auth.uid())
-    or public.current_user_role() in ('manager','deputy','admin')
+    or public.current_user_role() = 'manager'
   );
 
 -- ── expose to Data API + realtime ───────────────────────────

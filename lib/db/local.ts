@@ -1,6 +1,7 @@
 import type { DB, AuthResult } from "./types";
 import type { Profile, WorkEntry, NewWorkEntry } from "../types";
 import { ROSTER, findMember } from "../roster";
+import demoData from "../demo.data.json";
 
 // Local, no-backend implementation used on localhost / demo mode.
 // - Data lives in localStorage.
@@ -8,10 +9,10 @@ import { ROSTER, findMember } from "../roster";
 //   editor / deputy / manager views in separate tabs shows updates
 //   flowing between them (mirrors the "all connected" behaviour).
 
-const ENTRIES_KEY = "hoet.entries.v1";
-const PROFILES_KEY = "hoet.profiles.v1";
-const SESSION_KEY = "hoet.session.v1";
-const PING_KEY = "hoet.ping.v1";
+const ENTRIES_KEY = "hoet.entries.v3";
+const PROFILES_KEY = "hoet.profiles.v3";
+const SESSION_KEY = "hoet.session.v3";
+const PING_KEY = "hoet.ping.v3";
 
 const DEFAULT_PASSWORD = "Hoet@2026";
 
@@ -47,11 +48,40 @@ function seedProfiles(): Profile[] {
     id: "u_" + m.username,
     username: m.username,
     fullName: m.fullName,
+    email: m.email ?? null,
     role: m.role,
     pod: m.pod ?? null,
+    focus: m.focus ?? null,
+    wfh: m.wfh ?? false,
     title: m.title ?? null,
     active: true,
   }));
+}
+
+// Pre-populated demo entries (Sathiya Moorthy) so the app shows live
+// data on first run — visible in My Work, the Daily Dashboard and the
+// Monthly Report. Sourced from the House of EduTech report sheets.
+function seedEntries(): WorkEntry[] {
+  return demoData.entries.map((e, i) => {
+    const ts = `${e.workDate}T09:${String(10 + i).padStart(2, "0")}:00.000Z`;
+    return {
+      id: `demo_${demoData.editorId}_${i}`,
+      editorId: demoData.editorId,
+      editorName: demoData.editorName,
+      pod: demoData.pod,
+      workDate: e.workDate,
+      videoCode: e.videoCode,
+      title: e.title,
+      category: e.category as WorkEntry["category"],
+      durationSeconds: e.durationSeconds,
+      reviewLink: e.reviewLink,
+      finalLink: e.finalLink,
+      status: e.status as WorkEntry["status"],
+      remarks: e.remarks,
+      createdAt: ts,
+      updatedAt: ts,
+    };
+  });
 }
 
 export class LocalDB implements DB {
@@ -63,7 +93,7 @@ export class LocalDB implements DB {
       write(PROFILES_KEY, seedProfiles());
     }
     if (read<WorkEntry[] | null>(ENTRIES_KEY, null) === null) {
-      write(ENTRIES_KEY, []);
+      write(ENTRIES_KEY, seedEntries());
     }
   }
 

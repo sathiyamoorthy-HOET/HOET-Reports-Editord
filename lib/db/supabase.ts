@@ -1,6 +1,6 @@
 import type { DB, AuthResult } from "./types";
 import type { Profile, WorkEntry, NewWorkEntry } from "../types";
-import { getSupabase, usernameToEmail } from "./supabaseClient";
+import { getSupabase, loginToEmail } from "./supabaseClient";
 
 // Cloud implementation backed by Supabase (Postgres + Auth + Realtime).
 // Used in production. Every connected client subscribes to the same
@@ -11,8 +11,11 @@ interface ProfileRow {
   id: string;
   username: string;
   full_name: string;
+  email: string | null;
   role: Profile["role"];
   pod: string | null;
+  focus: string | null;
+  wfh: boolean | null;
   title: string | null;
   active: boolean;
 }
@@ -40,8 +43,11 @@ function toProfile(r: ProfileRow): Profile {
     id: r.id,
     username: r.username,
     fullName: r.full_name,
+    email: r.email,
     role: r.role,
     pod: r.pod,
+    focus: r.focus,
+    wfh: r.wfh ?? false,
     title: r.title,
     active: r.active,
   };
@@ -73,7 +79,7 @@ export class SupabaseDB implements DB {
   async signIn(username: string, password: string): Promise<AuthResult> {
     const sb = getSupabase();
     const { error } = await sb.auth.signInWithPassword({
-      email: usernameToEmail(username),
+      email: loginToEmail(username),
       password,
     });
     if (error) return { ok: false, error: error.message };
@@ -112,8 +118,11 @@ export class SupabaseDB implements DB {
       id: p.id,
       username: p.username,
       full_name: p.fullName,
+      email: p.email ?? null,
       role: p.role,
       pod: p.pod ?? null,
+      focus: p.focus ?? null,
+      wfh: p.wfh ?? false,
       title: p.title ?? null,
       active: p.active,
     });

@@ -4,32 +4,36 @@
 
 import rosterData from "./roster.data.json";
 
-export type Role = "editor" | "deputy" | "manager" | "admin";
+export type Role = "editor" | "manager";
 
 export interface RosterMember {
   username: string;
   fullName: string;
+  email?: string;
   role: Role;
-  pod?: string | null;
+  pod?: string | null; // manager's team
+  focus?: string | null; // content specialization
+  wfh?: boolean;
   title?: string;
 }
 
-// Reporting pods (AI generalists editors report into)
-export const PODS = [
-  "Sujal",
-  "Paras",
-  "Debasmitha",
-  "Brijesh",
-  "Sambhav",
-  "Nisha",
-  "Palas",
-  "Astha",
-  "Eshmith",
-  "May/Raj",
-];
+// Manager teams (editors are grouped under a manager)
+export const TEAMS = ["Vyshak", "Sathiya", "Mukesh", "Kaustubh", "Dheemanth"];
+
+// Content specializations
+export const FOCUS_OPTIONS = ["Organic", "Course", "Ads", "Podcast"];
+
+// Back-compat alias (older code referred to pods)
+export const PODS = TEAMS;
 
 export const ROSTER: RosterMember[] = rosterData as RosterMember[];
 
-export function findMember(username: string): RosterMember | undefined {
-  return ROSTER.find((m) => m.username.toLowerCase() === username.toLowerCase());
+export function findMember(input: string): RosterMember | undefined {
+  const q = input.trim().toLowerCase();
+  return ROSTER.find(
+    (m) =>
+      m.username.toLowerCase() === q ||
+      (m.email && m.email.toLowerCase() === q) ||
+      m.fullName.toLowerCase() === q
+  );
 }

@@ -1,26 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
-import { PODS } from "@/lib/roster";
+import { TEAMS, FOCUS_OPTIONS } from "@/lib/roster";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { Profile, Role } from "@/lib/types";
 
-const ROLES: Role[] = ["editor", "deputy", "manager", "admin"];
+const ROLES: Role[] = ["editor", "manager"];
 
 export default function AdminPage() {
   const { profiles, upsertProfile, mode, entries } = useStore();
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
-  const [newUser, setNewUser] = useState({ username: "", fullName: "", role: "editor" as Role, pod: "" });
+  const [newUser, setNewUser] = useState({ username: "", fullName: "", email: "", role: "editor" as Role, pod: "", focus: "" });
 
   const filtered = profiles
     .filter(
       (p) =>
         p.fullName.toLowerCase().includes(q.toLowerCase()) ||
-        p.username.toLowerCase().includes(q.toLowerCase())
+        p.username.toLowerCase().includes(q.toLowerCase()) ||
+        (p.email ?? "").toLowerCase().includes(q.toLowerCase())
     )
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+  // Teams = the known managers' teams plus any team already assigned to
+  // someone (so a manager can create a brand-new team just by typing it).
+  const allTeams = useMemo(() => {
+    const set = new Set<string>(TEAMS);
+    profiles.forEach((p) => p.pod && set.add(p.pod));
+    return Array.from(set).sort();
+  }, [profiles]);
 
   function entryCount(id: string) {
     return entries.filter((e) => e.editorId === id).length;
@@ -36,17 +45,25 @@ export default function AdminPage() {
       id: "u_" + newUser.username.trim().toLowerCase(),
       username: newUser.username.trim().toLowerCase(),
       fullName: newUser.fullName.trim(),
+      email: newUser.email.trim() || null,
       role: newUser.role,
       pod: newUser.pod || null,
+      focus: newUser.focus || null,
+      wfh: false,
       title: null,
       active: true,
     });
-    setNewUser({ username: "", fullName: "", role: "editor", pod: "" });
+    setNewUser({ username: "", fullName: "", email: "", role: "editor", pod: "", focus: "" });
     setAdding(false);
   }
 
   return (
     <div className="space-y-5">
+      <datalist id="teams-list">
+        {allTeams.map((t) => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <input
           className="input w-64"
@@ -65,12 +82,12 @@ export default function AdminPage() {
         <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
           Cloud mode: new sign-in accounts are created with the seed script
           (<code className="rounded bg-amber-100 px-1">npm run seed</code>) or the Supabase
-          dashboard. You can still edit roles &amp; pods here.
+          dashboard. You can still edit roles, teams &amp; focus here.
         </div>
       )}
 
       {adding && mode === "local" && (
-        <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-4">
+        <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-6">
           <input
             className="input"
             placeholder="username"
@@ -83,6 +100,12 @@ export default function AdminPage() {
             value={newUser.fullName}
             onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
           />
+          <input
+            className="input"
+            placeholder="email"
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          />
           <select
             className="input"
             value={newUser.role}
@@ -92,15 +115,22 @@ export default function AdminPage() {
               <option key={r} value={r}>{ROLE_LABELS[r]}</option>
             ))}
           </select>
+          <input
+            className="input"
+            list="teams-list"
+            placeholder="Team (type to add new)"
+            value={newUser.pod}
+            onChange={(e) => setNewUser({ ...newUser, pod: e.target.value })}
+          />
           <div className="flex gap-2">
             <select
               className="input"
-              value={newUser.pod}
-              onChange={(e) => setNewUser({ ...newUser, pod: e.target.value })}
+              value={newUser.focus}
+              onChange={(e) => setNewUser({ ...newUser, focus: e.target.value })}
             >
-              <option value="">No pod</option>
-              {PODS.map((p) => (
-                <option key={p} value={p}>{p}</option>
+              <option value="">Focus…</option>
+              {FOCUS_OPTIONS.map((f) => (
+                <option key={f} value={f}>{f}</option>
               ))}
             </select>
             <button className="btn-primary" onClick={addUser}>Save</button>
@@ -110,13 +140,14 @@ export default function AdminPage() {
 
       <div className="card">
         <div className="scroll-x">
-          <table className="w-full min-w-[720px]">
+          <table className="w-full min-w-[960px]">
             <thead className="bg-slate-50">
               <tr>
                 <th className="th">Name</th>
-                <th className="th">Username</th>
+                <th className="th">Email</th>
                 <th className="th">Role</th>
-                <th className="th">Pod</th>
+                <th className="th">Team</th>
+                <th className="th">Focus</th>
                 <th className="th text-center">Entries</th>
                 <th className="th text-center">Active</th>
               </tr>
@@ -124,8 +155,16 @@ export default function AdminPage() {
             <tbody className="divide-y divide-slate-100">
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="td font-medium text-slate-800">{p.fullName}</td>
-                  <td className="td font-mono text-xs text-slate-500">{p.username}</td>
+                  <td className="td">
+                    <div className="font-medium text-slate-800">
+                      {p.fullName}
+                      {p.wfh && (
+                        <span className="ml-1.5 rounded bg-slate-100 px-1 text-[10px] font-semibold text-slate-500">WFH</span>
+                      )}
+                    </div>
+                    <div className="font-mono text-[11px] text-slate-400">{p.username}</div>
+                  </td>
+                  <td className="td text-xs text-slate-500">{p.email ?? "—"}</td>
                   <td className="td">
                     <select
                       className="input py-1 text-xs"
@@ -138,14 +177,23 @@ export default function AdminPage() {
                     </select>
                   </td>
                   <td className="td">
+                    <input
+                      className="input py-1 text-xs"
+                      list="teams-list"
+                      value={p.pod ?? ""}
+                      placeholder="—"
+                      onChange={(e) => patch(p, { pod: e.target.value || null })}
+                    />
+                  </td>
+                  <td className="td">
                     <select
                       className="input py-1 text-xs"
-                      value={p.pod ?? ""}
-                      onChange={(e) => patch(p, { pod: e.target.value || null })}
+                      value={p.focus ?? ""}
+                      onChange={(e) => patch(p, { focus: e.target.value || null })}
                     >
                       <option value="">—</option>
-                      {PODS.map((pod) => (
-                        <option key={pod} value={pod}>{pod}</option>
+                      {FOCUS_OPTIONS.map((f) => (
+                        <option key={f} value={f}>{f}</option>
                       ))}
                     </select>
                   </td>

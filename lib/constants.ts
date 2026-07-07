@@ -25,7 +25,5 @@ export function statusMeta(value: Status) {
 
 export const ROLE_LABELS: Record<string, string> = {
   editor: "Editor",
-  deputy: "Deputy Manager",
   manager: "Manager",
-  admin: "Administrator",
 };

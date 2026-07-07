@@ -24,12 +24,16 @@ export function getSupabase(): SupabaseClient {
   return client;
 }
 
-// Every seeded account uses an internal email derived from the username,
-// so users only ever type a username. e.g. "krishna" -> "krishna@hoet.local"
-export const EMAIL_DOMAIN = "hoet.local";
+// Accounts are seeded with each person's real House of EduTech email.
+// Users can sign in with their email, or with a bare username (which is
+// then completed to <username>@houseofedtech.in).
+export const EMAIL_DOMAIN = "houseofedtech.in";
 
-export function usernameToEmail(username: string): string {
-  return `${username.trim().toLowerCase()}@${EMAIL_DOMAIN}`;
+// Turn login input into an email: pass through anything containing "@",
+// otherwise append the org domain.
+export function loginToEmail(input: string): string {
+  const v = input.trim().toLowerCase();
+  return v.includes("@") ? v : `${v}@${EMAIL_DOMAIN}`;
 }
 
 export function emailToUsername(email: string): string {

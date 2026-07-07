@@ -91,3 +91,39 @@ export function daysInMonth(mk: string): number {
   const [y, m] = mk.split("-").map(Number);
   return new Date(y, m, 0).getDate();
 }
+
+export interface WeekRange {
+  week: number; // 1..5
+  start: string; // YYYY-MM-DD
+  end: string; // YYYY-MM-DD
+  label: string; // e.g. "01–07 Jul"
+}
+
+// The Week 1-5 ranges of a month, aligned to the 1st (matches weekOfMonth).
+export function weeksInMonth(mk: string): WeekRange[] {
+  const [y, m] = mk.split("-").map(Number);
+  const total = daysInMonth(mk);
+  const ranges: WeekRange[] = [];
+  for (let w = 1; w <= 5; w++) {
+    const startDay = (w - 1) * 7 + 1;
+    if (startDay > total) break;
+    const endDay = Math.min(w * 7, total);
+    const start = `${mk}-${String(startDay).padStart(2, "0")}`;
+    const end = `${mk}-${String(endDay).padStart(2, "0")}`;
+    const monShort = new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short" });
+    ranges.push({
+      week: w,
+      start,
+      end,
+      label: `${String(startDay).padStart(2, "0")}–${String(endDay).padStart(2, "0")} ${monShort}`,
+    });
+  }
+  return ranges;
+}
+
+// Day-of-week label + number for a date, e.g. "Mon 07"
+export function dayLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString("en-US", { weekday: "short", day: "2-digit" });
+}
