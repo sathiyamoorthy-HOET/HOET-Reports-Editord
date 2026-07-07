@@ -11,7 +11,7 @@ import type { WorkEntry } from "@/lib/types";
 export default function MyWorkPage() {
   const { profile, entries, addEntry, updateEntry, deleteEntry } = useStore();
   const [editing, setEditing] = useState<WorkEntry | null>(null);
-  const [showForm, setShowForm] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
 
   const mine = useMemo(
     () => entries.filter((e) => e.editorId === profile?.id),
@@ -29,12 +29,25 @@ export default function MyWorkPage() {
   }));
   const monthDuration = monthEntries.reduce((a, e) => a + e.durationSeconds, 0);
 
+  function openNew() {
+    setEditing(null);
+    setFormOpen(true);
+  }
+  function openEdit(e: WorkEntry) {
+    setEditing(e);
+    setFormOpen(true);
+  }
+  function closeForm() {
+    setFormOpen(false);
+    setEditing(null);
+  }
+
   if (!profile) return null;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         <StatCard label="Today" value={todays.length} sub="videos logged" />
         <StatCard label="This month" value={monthEntries.length} sub="total videos" accent="#10b981" />
         <StatCard label="Month duration" value={formatDuration(monthDuration)} accent="#f59e0b" />
@@ -44,67 +57,29 @@ export default function MyWorkPage() {
           sub="this month"
           accent="#4f46e5"
         />
-      </div>
-
-      {/* Entry form */}
-      <div className="card overflow-hidden">
-        <button
-          className="flex w-full items-center justify-between px-5 py-3 text-left"
-          onClick={() => {
-            setShowForm((s) => !s);
-            setEditing(null);
-          }}
-        >
-          <span className="font-semibold text-slate-800">
-            {editing ? "Edit entry" : "Log a video"}
-          </span>
-          <span className="text-slate-400">{showForm ? "▲" : "▼"}</span>
-        </button>
-        {showForm && (
-          <div className="border-t border-slate-100 p-5">
-            <EntryForm
-              key={editing?.id ?? "new"}
-              editorId={profile.id}
-              existing={editing ?? undefined}
-              onSubmit={async (e) => {
-                if (editing) {
-                  await updateEntry(editing.id, e);
-                  setEditing(null);
-                } else {
-                  await addEntry(e);
-                }
-              }}
-              onCancel={editing ? () => setEditing(null) : undefined}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Month category breakdown */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {monthCounts.map((c) => (
-          <div key={c.value} className="card flex items-center justify-between p-3">
-            <span className="text-sm font-medium" style={{ color: c.color }}>
-              {c.label}
-            </span>
-            <span className="text-lg font-bold text-slate-700">{c.n}</span>
-          </div>
+          <StatCard key={c.value} label={c.label} value={c.n} accent={c.color} />
         ))}
       </div>
 
-      {/* Entries table */}
+      {/* Entries sheet (default view) */}
       <div className="card">
-        <div className="flex items-center justify-between px-5 py-3">
-          <h2 className="font-semibold text-slate-800">My entries</h2>
-          <span className="text-xs text-slate-400">{mine.length} total</span>
+        <div className="flex items-center justify-between gap-3 px-5 py-3">
+          <div>
+            <h2 className="font-semibold text-slate-800">My Work</h2>
+            <span className="text-xs text-slate-400">{mine.length} entries</span>
+          </div>
+          <button className="btn-primary" onClick={openNew}>
+            + New Task
+          </button>
         </div>
         {mine.length === 0 ? (
           <div className="p-5">
-            <Empty title="No entries yet" hint="Log your first video using the form above." />
+            <Empty title="No entries yet" hint="Click “New Task” to log your first video." />
           </div>
         ) : (
           <div className="scroll-x border-t border-slate-100">
-            <table className="w-full min-w-[820px]">
+            <table className="w-full min-w-[900px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="th">Date</th>
@@ -150,11 +125,7 @@ export default function MyWorkPage() {
                       <div className="flex gap-1">
                         <button
                           className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-brand-600"
-                          onClick={() => {
-                            setEditing(e);
-                            setShowForm(true);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
+                          onClick={() => openEdit(e)}
                           title="Edit"
                         >
                           ✏️
@@ -177,6 +148,45 @@ export default function MyWorkPage() {
           </div>
         )}
       </div>
+
+      {/* New / Edit task modal */}
+      {formOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm"
+          onClick={closeForm}
+        >
+          <div
+            className="card my-8 w-full max-w-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+              <h3 className="font-semibold text-slate-800">
+                {editing ? "Edit task" : "New task"}
+              </h3>
+              <button
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
+                onClick={closeForm}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-5">
+              <EntryForm
+                key={editing?.id ?? "new"}
+                editorId={profile.id}
+                existing={editing ?? undefined}
+                onSubmit={async (data) => {
+                  if (editing) await updateEntry(editing.id, data);
+                  else await addEntry(data);
+                  closeForm();
+                }}
+                onCancel={closeForm}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

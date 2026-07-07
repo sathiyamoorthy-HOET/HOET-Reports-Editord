@@ -76,7 +76,7 @@ export default function MyMonthPage() {
   if (!profile) return null;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <select className="input w-auto" value={mk} onChange={(e) => setMk(e.target.value)}>
           {months.map((m) => (
